@@ -1,0 +1,92 @@
+pip install Flask Office365-REST-Python-Client
+
+from flask import Flask, render_template
+from office365.runtime.auth.user_credential import UserCredential
+from office365.sharepoint.client_context import ClientContext
+from office365.runtime.utilities.request_options import RequestOptions
+
+app = Flask(__name__)
+
+@app.route('/')
+def home():
+    return render_template('index.html')
+
+@app.route('/insert_table', methods=['POST'])
+def insert_table():
+    site_url = "https://your-sharepoint-site-url"
+    username = "your-username"
+    password = "your-password"
+    document_url = "/sites/your-site/Shared Documents/YourDocument.docx"
+    
+    ctx = ClientContext(site_url).with_credentials(UserCredential(username, password))
+    
+    # Insert a sample table into the Word document
+    doc = ctx.web.current_user.get_document(context.url)
+    table_html = "<table border='1'><tr><td>Column 1</td><td>Column 2</td></tr><tr><td>Data 1</td><td>Data 2</td></tr></table>"
+    doc.insert_html(table_html, 'End').execute_query()
+
+    return "Table inserted successfully!"
+
+if __name__ == '__main__':
+    app.run(debug=True)
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Word Plugin</title>
+</head>
+<body>
+    <h1>Welcome to the Word Plugin</h1>
+    <button id="insertTable">Insert Table</button>
+    <script type="text/javascript" src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+    <script type="text/javascript">
+        Office.onReady(function (info) {
+            if (info.host === Office.HostType.Word) {
+                document.getElementById("insertTable").onclick = function () {
+                    insertTable();
+                };
+            }
+        });
+
+        function insertTable() {
+            Office.context.ui.displayDialogAsync(
+                'https://your-flask-server-url/insert_table',
+                { height: 50, width: 50 },
+                function (result) {
+                    // Handle result
+                }
+            );
+        }
+    </script>
+</body>
+</html>
+
+python app.py
+
+<?xml version="1.0" encoding="UTF-8"?>
+<OfficeApp xmlns="http://schemas.microsoft.com/office/appforoffice/1.1" manifestVersion="1.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="MailApp">
+  <Id>your.plugin.id</Id>
+  <Version>1.0</Version>
+  <ProviderName>Your Provider</ProviderName>
+  <DefaultLocale>en-US</DefaultLocale>
+  <DisplayName DefaultValue="Word Plugin" />
+  <Description DefaultValue="A sample Word plugin." />
+  <IconUrl DefaultValue="https://your-icon-url/icon.png" />
+  <SupportUrl DefaultValue="https://your-support-url.com" />
+  <AppDomains>
+    <AppDomain>https://your-flask-server-url</AppDomain>
+  </AppDomains>
+  <Hosts>
+    <Host Name="Document" />
+  </Hosts>
+  <Requirements>
+    <Sets>
+      <Set Name="Document" MinVersion="1.1" />
+    </Sets>
+  </Requirements>
+  <DefaultSettings>
+    <SourceLocation DefaultValue="https://your-flask-server-url" />
+  </DefaultSettings>
+</OfficeApp>
